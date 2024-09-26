@@ -1,0 +1,180 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.*;
+
+public class SnakeGame extends JFrame {
+    public SnakeGame() {
+        add(new GamePanel());
+        setTitle("Snake Game");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setResizable(false);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new SnakeGame();
+    }
+}
+
+class GamePanel extends JPanel implements ActionListener {
+    private final int TILE_SIZE = 25;
+    private final int GRID_WIDTH = 30;
+    private final int GRID_HEIGHT = 30;
+    private final int ALL_TILES = GRID_WIDTH * GRID_HEIGHT;
+    private final int[] x = new int[ALL_TILES];
+    private final int[] y = new int[ALL_TILES];
+    private int snakeLength;
+    private int appleX;
+    private int appleY;
+    private boolean running = false;
+    private boolean leftDirection = false;
+    private boolean rightDirection = true;
+    private boolean upDirection = false;
+    private boolean downDirection = false;
+    private Timer timer;
+
+    public GamePanel() {
+        setPreferredSize(new Dimension(GRID_WIDTH * TILE_SIZE, GRID_HEIGHT * TILE_SIZE));
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                int key = e.getKeyCode();
+
+                if ((key == KeyEvent.VK_LEFT) && (!rightDirection)) {
+                    leftDirection = true;
+                    upDirection = false;
+                    downDirection = false;
+                }
+
+                if ((key == KeyEvent.VK_RIGHT) && (!leftDirection)) {
+                    rightDirection = true;
+                    upDirection = false;
+                    downDirection = false;
+                }
+
+                if ((key == KeyEvent.VK_UP) && (!downDirection)) {
+                    upDirection = true;
+                    rightDirection = false;
+                    leftDirection = false;
+                }
+
+                if ((key == KeyEvent.VK_DOWN) && (!upDirection)) {
+                    downDirection = true;
+                    rightDirection = false;
+                    leftDirection = false;
+                }
+            }
+        });
+        startGame();
+    }
+
+    private void startGame() {
+        snakeLength = 3;
+        for (int i = 0; i < snakeLength; i++) {
+            x[i] = 50 - i * TILE_SIZE;
+            y[i] = 50;
+        }
+        placeApple();
+        running = true;
+        timer = new Timer(140, this);
+        timer.start();
+    }
+
+    private void placeApple() {
+        int randomPos = (int) (Math.random() * GRID_WIDTH);
+        appleX = randomPos * TILE_SIZE;
+
+        randomPos = (int) (Math.random() * GRID_HEIGHT);
+        appleY = randomPos * TILE_SIZE;
+    }
+     public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (running) {
+            g.setColor(Color.RED);
+            g.fillOval(appleX, appleY, TILE_SIZE, TILE_SIZE);
+
+            for (int i = 0; i < snakeLength; i++) {
+                if (i == 0) {
+                    g.setColor(Color.GREEN);
+                } else {
+                    g.setColor(Color.YELLOW);
+                }
+                g.fillRect(x[i], y[i], TILE_SIZE, TILE_SIZE);
+            }
+
+            Toolkit.getDefaultToolkit().sync();
+        } else {
+            gameOver(g);
+        }
+    }
+
+    private void move() {
+        for (int i = snakeLength; i > 0; i--) {
+            x[i] = x[i - 1];
+            y[i] = y[i - 1];
+        }
+
+        if (leftDirection) {
+            x[0] -= TILE_SIZE;
+        }
+
+        if (rightDirection) {
+            x[0] += TILE_SIZE;
+        }
+
+        if (upDirection) {
+            y[0] -= TILE_SIZE;
+        }
+
+        if (downDirection) {
+            y[0] += TILE_SIZE;
+        }
+    }
+
+    private void checkCollision() {
+        for (int i = snakeLength; i > 0; i--) {
+            if ((i > 3) && (x[0] == x[i]) && (y[0] == y[i])) {
+                running = false;
+            }
+        }
+
+        if (y[0] >= GRID_HEIGHT * TILE_SIZE || y[0] < 0 || x[0] >= GRID_WIDTH * TILE_SIZE || x[0] < 0) {
+            running = false;
+        }
+
+        if (!running) {
+            timer.stop();
+        }
+    }
+
+    private void checkApple() {
+        if ((x[0] == appleX) && (y[0] == appleY)) {
+            snakeLength++;
+            placeApple();
+        }
+    }
+
+    private void gameOver(Graphics g) {
+        String msg = "Game Over";
+        Font font = new Font("Helvetica", Font.BOLD, 40);
+        FontMetrics metrics = getFontMetrics(font);
+
+        g.setColor(Color.RED);
+        g.setFont(font);
+        g.drawString(msg, (getWidth() - metrics.stringWidth(msg)) / 2, getHeight() / 2);
+    }
+    public void actionPerformed(ActionEvent e) {
+        if (running) {
+            checkApple();
+            checkCollision();
+            move();
+        }
+        repaint();
+    }
+}

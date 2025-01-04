@@ -24,7 +24,6 @@
 - 😄 Pronouns: She/Her
 
 - ⚡ Fun fact:
-   - I'm a 1st place ranker in my 2nd and 3rd semester and a runner-up in a state-level Abacus competition.
    - I enjoy combining tech with creative solutions, from AI chatbots to enhancing speech clarity!
 
 
